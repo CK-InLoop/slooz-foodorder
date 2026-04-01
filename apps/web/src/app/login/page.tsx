@@ -1,6 +1,7 @@
 'use client';
 
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 import { getSession, saveSession } from '@/lib/auth';

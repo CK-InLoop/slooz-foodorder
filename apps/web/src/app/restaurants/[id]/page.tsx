@@ -1,6 +1,7 @@
 'use client';
 
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { AccessDenied } from '@/components/access-denied';
@@ -89,15 +90,17 @@ export default function RestaurantDetailsPage() {
     [quantities],
   );
 
+  const restaurant = data?.restaurant ?? null;
+
   const total = useMemo(() => {
-    const menuItems = data?.restaurant?.menuItems ?? [];
+    const menuItems = restaurant?.menuItems ?? [];
     const prices = new Map(menuItems.map((item) => [item.id, item.price]));
 
     return selectedItems.reduce(
       (sum, item) => sum + (prices.get(item.menuItemId) ?? 0) * item.quantity,
       0,
     );
-  }, [data?.restaurant?.menuItems, selectedItems]);
+  }, [restaurant?.menuItems, selectedItems]);
 
   if (!session) {
     return null;
@@ -128,22 +131,22 @@ export default function RestaurantDetailsPage() {
         </p>
       ) : null}
 
-      {data?.restaurant ? (
+      {restaurant ? (
         <>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h1 className="text-2xl font-semibold text-slate-900">
-              {data.restaurant.name}
+              {restaurant.name}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              {data.restaurant.city}, {data.restaurant.country}
+              {restaurant.city}, {restaurant.country}
             </p>
-            {data.restaurant.description ? (
-              <p className="mt-2 text-sm text-slate-600">{data.restaurant.description}</p>
+            {restaurant.description ? (
+              <p className="mt-2 text-sm text-slate-600">{restaurant.description}</p>
             ) : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {data.restaurant.menuItems.map((item) => (
+            {restaurant.menuItems.map((item) => (
               <article
                 key={item.id}
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
@@ -207,10 +210,14 @@ export default function RestaurantDetailsPage() {
                 setSubmitError(null);
 
                 try {
+                  if (!restaurant) {
+                    return;
+                  }
+
                   await createOrder({
                     variables: {
                       input: {
-                        restaurantId: data.restaurant.id,
+                        restaurantId: restaurant.id,
                         items: selectedItems,
                       },
                     },
