@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum Country {
+  INDIA
+  AMERICA
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model User {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  email          String          @unique
+  passwordHash   String
+  name           String
+  role           Role            @default(MEMBER)
+  country        Country
+  orders         Order[]
+  paymentMethods PaymentMethod[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([country, role])
+}
+
+model Restaurant {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  city        String
+  country     Country
+  menuItems   MenuItem[]
+  orders      Order[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([country, name])
+  @@unique([name, country])
+}
+
+model MenuItem {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  restaurantId String      @db.ObjectId
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  price        Float
+  isAvailable  Boolean     @default(true)
+  orderItems   OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([restaurantId, isAvailable])
+  @@unique([restaurantId, name])
+}
+
+model Order {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String        @db.ObjectId
+  user          User          @relation(fields: [userId], references: [id])
+  restaurantId  String        @db.ObjectId
+  restaurant    Restaurant    @relation(fields: [restaurantId], references: [id])
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  subtotal      Float
+  tax           Float
+  total         Float
+  notes         String?
+  items         OrderItem[]
+  payment       Payment?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([restaurantId, createdAt])
+}
+
+model OrderItem {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId    String   @db.ObjectId
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String   @db.ObjectId
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  unitPrice  Float
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
+model Payment {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  orderId         String         @unique @db.ObjectId
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentMethodId String?        @db.ObjectId
+  paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  amount          Float
+  status          PaymentStatus  @default(PENDING)
+  processedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model PaymentMethod {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  provider  String
+  last4     String
+  isDefault Boolean   @default(false)
+  isActive  Boolean   @default(true)
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, isDefault])
+  @@unique([userId, provider, last4])
+}
