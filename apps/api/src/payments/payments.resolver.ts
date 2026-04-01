@@ -1,6 +1,6 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AuthUser } from '../common/auth-user.interface';
+import type { AuthUser } from '../common/auth-user.interface';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
 import { GqlAuthGuard } from '../common/guards/gql-auth.guard';
