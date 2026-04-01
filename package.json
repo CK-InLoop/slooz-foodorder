@@ -1,13 +1,17 @@
 {
   "name": "slooz_food_order",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Role-based country-scoped food ordering platform",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:api": "npm run start:dev --workspace apps/api",
+    "dev:web": "npm run dev --workspace apps/web",
+    "build:api": "npm run build --workspace apps/api",
+    "build:web": "npm run build --workspace apps/web",
+    "lint:api": "npm run lint --workspace apps/api",
+    "lint:web": "npm run lint --workspace apps/web"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+  "workspaces": [
+    "apps/*"
+  ]
 }
